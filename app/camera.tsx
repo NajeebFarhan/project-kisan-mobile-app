@@ -1,12 +1,13 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const router = useRouter();
   const cameraRef = useRef<any>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!permission) return;
@@ -22,7 +23,8 @@ export default function CameraScreen() {
   }, [permission]);
 
   const handleTakePhoto = async () => {
-    if (cameraRef.current) {
+    if (cameraRef.current && !loading) {
+      setLoading(true);
       try {
         const photo = await cameraRef.current.takePictureAsync({ base64: true });
         if (photo && photo.base64) {
@@ -40,6 +42,8 @@ export default function CameraScreen() {
       } catch (err) {
         Alert.alert("Error", "Failed to upload photo.");
         console.log(err)
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -64,10 +68,16 @@ export default function CameraScreen() {
         <TouchableOpacity
           className="bg-white/80 px-8 py-4 rounded-full border-2 border-gray-400"
           onPress={handleTakePhoto}
+          disabled={loading}
         >
           <Text className="text-black font-bold text-lg">Take Photo</Text>
         </TouchableOpacity>
       </View>
+      {loading && (
+        <View className="absolute inset-0 bg-black/60 items-center justify-center z-50">
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
     </View>
   );
 } 
