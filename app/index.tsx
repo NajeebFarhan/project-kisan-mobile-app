@@ -1,62 +1,43 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { Link } from "expo-router";
 import * as Speech from "expo-speech";
 import { useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
-
-const testText = "This is a text to speech test";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
-  const [showCamera, setShowCamera] = useState(false);
-  const [permission, requestPermission] = useCameraPermissions();
+  const [inputText, setInputText] = useState("");
 
   const handleSpeak = () => {
-    Speech.speak(testText);
-  };
-
-  const openCamera = async () => {
-    if (!permission) return;
-    if (!permission.granted) {
-      const response = await requestPermission();
-      if (!response.granted) {
-        Alert.alert("Permission required", "Camera access is needed to use this feature.");
-        return;
-      }
+    if (inputText.trim()) {
+      Speech.speak(inputText);
     }
-    setShowCamera(true);
   };
-
-  if (showCamera) {
-    return (
-      <View className="flex-1">
-        <CameraView style={{ flex: 1 }}>
-          <View className="absolute top-10 left-4">
-            <TouchableOpacity
-              className="bg-white/80 px-4 py-2 rounded-lg"
-              onPress={() => setShowCamera(false)}
-            >
-              <Text className="text-black font-semibold">Back</Text>
-            </TouchableOpacity>
-          </View>
-        </CameraView>
-      </View>
-    );
-  }
 
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-lg font-semibold text-gray-800 mb-6">{testText}</Text>
+    <View className="flex-1 items-center justify-center bg-white px-4">
+      <Text className="text-lg font-semibold text-gray-800 mb-6 text-center min-h-[28px]">
+        {inputText}
+      </Text>
+      <TextInput
+        className="border border-gray-300 rounded-lg px-4 py-2 w-full max-w-md mb-4 text-base"
+        placeholder="Type text to read out loud..."
+        value={inputText}
+        onChangeText={setInputText}
+        multiline
+      />
       <TouchableOpacity
         className="bg-gray-400 px-6 py-3 rounded-lg mb-4"
         onPress={handleSpeak}
       >
         <Text className="text-white text-base font-semibold">read out loud</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        className="bg-blue-500 px-6 py-3 rounded-lg"
-        onPress={openCamera}
+      <Link
+        href="./camera"
+        asChild
       >
-        <Text className="text-white text-base font-semibold">Open Camera</Text>
-      </TouchableOpacity>
+        <TouchableOpacity className="bg-blue-500 px-6 py-3 rounded-lg">
+          <Text className="text-white text-base font-semibold">Open Camera</Text>
+        </TouchableOpacity>
+      </Link>
     </View>
   );
 }
