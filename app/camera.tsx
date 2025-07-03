@@ -1,5 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
@@ -47,18 +48,17 @@ export default function CameraScreen() {
         } as any);
 
         if (photo) {
-
           const response = await fetch(IMG_UPLOAD_URL + "/upload", {
             method: "POST",
             headers: { 'Content-Type': 'multipart/form-data' },
-            // headers: { 'Content-Type': 'application/json' },
             body: formData,
-            // body: JSON.stringify({ image: photo.base64 }),
           });
-
-          
           const data = await response.json();
-
+          if (response.ok && data && data.message) {
+            router.replace({ pathname: "/response", params: { message: data.message } });
+          } else {
+            Alert.alert("Error", "Failed to upload photo.");
+          }
         } else {
           Alert.alert("Error", "Failed to capture photo.");
         }
@@ -68,6 +68,56 @@ export default function CameraScreen() {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const handlePickImage = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Permission to access files is required!');
+        setLoading(false);
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.4,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const compressed = await ImageManipulator.manipulateAsync(asset.uri, [], {
+          compress: 0.4,
+          format: ImageManipulator.SaveFormat.JPEG,
+        });
+        const formData = new FormData();
+        formData.append('image', {
+          uri: compressed.uri,
+          name: 'photo.jpg',
+          type: 'image/jpeg',
+        } as any);
+        const response = await fetch(IMG_UPLOAD_URL + "/upload", {
+          method: "POST",
+          headers: { 'Content-Type': 'multipart/form-data' },
+          body: formData,
+        });
+        const data = await response.json();
+        if (response.ok && data && data.message) {
+          router.replace({ pathname: "/response", params: { message: data.message } });
+        } else {
+          Alert.alert("Error", "Failed to upload photo.");
+        }
+      } else {
+        // User cancelled or no asset
+        setLoading(false);
+      }
+    } catch (err) {
+      Alert.alert("Error", "Failed to pick or upload photo.");
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,7 +137,14 @@ export default function CameraScreen() {
           <Text className="text-black font-semibold">Back</Text>
         </TouchableOpacity>
       </View>
-      <View className="absolute bottom-10 left-0 right-0 items-center">
+      <View className="absolute bottom-10 left-0 right-0 flex-row items-center justify-between px-8">
+        <TouchableOpacity
+          className="bg-white/80 px-6 py-3 rounded-lg border-2 border-gray-400"
+          onPress={handlePickImage}
+          disabled={loading}
+        >
+          <Text className="text-black text-base font-semibold">Files</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           className="bg-white/80 px-8 py-4 rounded-full border-2 border-gray-400"
           onPress={handleTakePhoto}
