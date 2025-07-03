@@ -9,7 +9,7 @@ export default function CameraScreen() {
   const router = useRouter();
   const cameraRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
-  const IMG_UPLOAD_URL: string = "https://wal-dreams-next-inf.trycloudflare.com" //process.env.IMG_UPLOAD_URL || "";
+  const IMG_UPLOAD_URL: string = process.env.EXPO_PUBLIC_IMG_UPLOAD_URL || "";
 
   useEffect(() => {
     if (!permission) return;
@@ -47,14 +47,19 @@ export default function CameraScreen() {
         } as any);
 
         if (photo) {
-          await fetch(IMG_UPLOAD_URL + "/upload", {
+
+          // const response = 
+	        await fetch(IMG_UPLOAD_URL + "/upload", {
             method: "POST",
             headers: { 'Content-Type': 'multipart/form-data' },
             // headers: { 'Content-Type': 'application/json' },
             body: formData,
             // body: JSON.stringify({ image: photo.base64 }),
           });
+
+          // const data = await response.json();
           Alert.alert("Success", "Photo uploaded successfully!");
+
         } else {
           Alert.alert("Error", "Failed to capture photo.");
         }
