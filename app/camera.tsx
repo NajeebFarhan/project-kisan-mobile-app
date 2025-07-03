@@ -1,4 +1,5 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as ImageManipulator from 'expo-image-manipulator';
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
@@ -8,7 +9,7 @@ export default function CameraScreen() {
   const router = useRouter();
   const cameraRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
-  const IMG_UPLOAD_URL: string = "https://talk-fell-necklace-matrix.trycloudflare.com" //process.env.IMG_UPLOAD_URL || "";
+  const IMG_UPLOAD_URL: string = "https://wal-dreams-next-inf.trycloudflare.com" //process.env.IMG_UPLOAD_URL || "";
 
   useEffect(() => {
     if (!permission) return;
@@ -29,13 +30,18 @@ export default function CameraScreen() {
       try {
         const photo = await cameraRef.current.takePictureAsync({
           base64: false,
-          quality: 0.4,
+          quality: 0.3,
           skipProcessing: true,
+        });
+
+        const compressed = await ImageManipulator.manipulateAsync(photo.uri, [], {
+          compress: 0.4,
+          format: ImageManipulator.SaveFormat.JPEG,
         });
 
         const formData = new FormData();
         formData.append('image', {
-          uri: photo.uri,
+          uri: compressed.uri,
           name: 'photo.jpg',
           type: 'image/jpeg',
         } as any);
@@ -44,7 +50,9 @@ export default function CameraScreen() {
           await fetch(IMG_UPLOAD_URL + "/upload", {
             method: "POST",
             headers: { 'Content-Type': 'multipart/form-data' },
+            // headers: { 'Content-Type': 'application/json' },
             body: formData,
+            // body: JSON.stringify({ image: photo.base64 }),
           });
           Alert.alert("Success", "Photo uploaded successfully!");
         } else {
