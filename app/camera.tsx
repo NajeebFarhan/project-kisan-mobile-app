@@ -48,8 +48,7 @@ export default function CameraScreen() {
 
         if (photo) {
 
-          // const response = 
-	        await fetch(IMG_UPLOAD_URL + "/upload", {
+          const response = await fetch(IMG_UPLOAD_URL + "/upload", {
             method: "POST",
             headers: { 'Content-Type': 'multipart/form-data' },
             // headers: { 'Content-Type': 'application/json' },
@@ -57,8 +56,8 @@ export default function CameraScreen() {
             // body: JSON.stringify({ image: photo.base64 }),
           });
 
-          // const data = await response.json();
-          Alert.alert("Success", "Photo uploaded successfully!");
+          
+          const data = await response.json();
 
         } else {
           Alert.alert("Error", "Failed to capture photo.");
