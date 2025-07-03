@@ -1,5 +1,8 @@
+// import { config } from "dotenv";
 import { Stack } from "expo-router";
 import "../global.css";
+
+// config()
 
 export default function RootLayout() {
   return (

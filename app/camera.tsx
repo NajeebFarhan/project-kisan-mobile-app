@@ -8,6 +8,7 @@ export default function CameraScreen() {
   const router = useRouter();
   const cameraRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
+  const IMG_UPLOAD_URL: string = "https://talk-fell-necklace-matrix.trycloudflare.com" //process.env.IMG_UPLOAD_URL || "";
 
   useEffect(() => {
     if (!permission) return;
@@ -26,14 +27,24 @@ export default function CameraScreen() {
     if (cameraRef.current && !loading) {
       setLoading(true);
       try {
-        const photo = await cameraRef.current.takePictureAsync({ base64: true });
-        if (photo && photo.base64) {
-          await fetch("https://erp-segment-nancy-probability.trycloudflare.com/upload", {
+        const photo = await cameraRef.current.takePictureAsync({
+          base64: false,
+          quality: 0.4,
+          skipProcessing: true,
+        });
+
+        const formData = new FormData();
+        formData.append('image', {
+          uri: photo.uri,
+          name: 'photo.jpg',
+          type: 'image/jpeg',
+        } as any);
+
+        if (photo) {
+          await fetch(IMG_UPLOAD_URL + "/upload", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ image: photo.base64 }),
+            headers: { 'Content-Type': 'multipart/form-data' },
+            body: formData,
           });
           Alert.alert("Success", "Photo uploaded successfully!");
         } else {
