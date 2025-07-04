@@ -1,17 +1,24 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Speech from "expo-speech";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function ResponseScreen() {
   const router = useRouter();
   const { message } = useLocalSearchParams();
+  const hasSpoken = useRef(false);
 
   useEffect(() => {
+    hasSpoken.current = false;
     if (typeof message === 'string' && message.trim()) {
-      Speech.speak(message);
+      Speech.stop();
+      Speech.speak(message, {
+        onDone: () => { hasSpoken.current = true; },
+      });
     }
-    // No cleanup needed for speech on unmount, as we want it to finish unless user presses back
+    return () => {
+      Speech.stop();
+    };
   }, [message]);
 
   const handleBack = () => {
@@ -19,19 +26,38 @@ export default function ResponseScreen() {
     router.replace("/");
   };
 
+  const handleRepeat = () => {
+    if (typeof message === 'string' && message.trim()) {
+      Speech.stop();
+      Speech.speak(message);
+    }
+  };
+
   return (
-    <View className="flex-1 bg-white px-4">
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 32 }}>
-        <Text className="text-xl font-bold text-green-800 mb-8 text-center">
-          {typeof message === 'string' ? message : ''}
-        </Text>
-        <TouchableOpacity
-          className="bg-gray-400 px-6 py-3 rounded-lg mb-8"
-          onPress={handleBack}
+    <View className="flex-1 bg-white px-4 justify-center items-center">
+      <TouchableOpacity
+        className="absolute top-8 left-4 bg-gray-400 px-6 py-3 rounded-lg z-10"
+        onPress={handleBack}
+      >
+        <Text className="text-white text-base font-semibold">Back</Text>
+      </TouchableOpacity>
+      <View className="bg-green-50 rounded-2xl shadow-md px-6 py-6 w-full max-w-2xl items-center justify-center min-h-[200px] relative">
+        <ScrollView
+          contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', minHeight: 120 }}
+          showsVerticalScrollIndicator={true}
+          style={{ width: '100%' }}
         >
-          <Text className="text-white text-base font-semibold">Back</Text>
+          <Text className="text-xl font-bold text-green-800 text-center">
+            {typeof message === 'string' ? message : ''}
+          </Text>
+        </ScrollView>
+        <TouchableOpacity
+          className="absolute bottom-4 right-4 bg-green-600 px-6 py-3 rounded-lg"
+          onPress={handleRepeat}
+        >
+          <Text className="text-white text-base font-semibold">Repeat</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </View>
   );
 } 
