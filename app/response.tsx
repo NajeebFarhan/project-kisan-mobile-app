@@ -23,7 +23,7 @@ export default function ResponseScreen() {
 
   const handleBack = () => {
     Speech.stop();
-    router.replace("/home");
+    router.replace("/camera");
   };
 
   const handleRepeat = () => {
