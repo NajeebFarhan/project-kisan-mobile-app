@@ -109,36 +109,42 @@ export default function CameraScreen() {
 
   const handleConfirmUpload = async () => {
     if (!selectedImage) return;
-    setLoading(true);
-    try {
-      const compressed = await ImageManipulator.manipulateAsync(selectedImage, [], {
-        compress: 0.4,
-        format: ImageManipulator.SaveFormat.JPEG,
-      });
-      const formData = new FormData();
-      formData.append('image', {
-        uri: compressed.uri,
-        name: 'photo.jpg',
-        type: 'image/jpeg',
-      } as any);
-      const response = await fetch(IMG_UPLOAD_URL + "/upload", {
-        method: "POST",
-        headers: { 'Content-Type': 'multipart/form-data' },
-        body: formData,
-      });
-      const data = await response.json();
-      if (response.ok && data && data.message) {
-        setModalVisible(false);
-        setSelectedImage(null);
-        router.replace({ pathname: "/response", params: { message: data.message } });
-      } else {
-        Alert.alert("Error", "Failed to upload photo.");
+    setModalVisible(false);
+    setTimeout(async () => {
+      setLoading(true);
+      try {
+        const compressed = await ImageManipulator.manipulateAsync(selectedImage, [], {
+          compress: 0.4,
+          format: ImageManipulator.SaveFormat.JPEG,
+        });
+        const formData = new FormData();
+        formData.append('image', {
+          uri: compressed.uri,
+          name: 'photo.jpg',
+          type: 'image/jpeg',
+        } as any);
+        const response = await fetch(IMG_UPLOAD_URL + "/upload", {
+          method: "POST",
+          headers: { 'Content-Type': 'multipart/form-data' },
+          body: formData,
+        });
+        const data = await response.json();
+        if (response.ok && data && data.message) {
+          setSelectedImage(null);
+          router.replace({ pathname: "/response", params: { message: data.message } });
+        } else {
+          Alert.alert("Error", "Failed to upload photo.", [
+            { text: "OK", onPress: () => setLoading(false) }
+          ]);
+        }
+      } catch (err) {
+        Alert.alert("Error", "Failed to upload photo.", [
+          { text: "OK", onPress: () => setLoading(false) }
+        ]);
+      } finally {
+        if (loading) setLoading(false);
       }
-    } catch (err) {
-      Alert.alert("Error", "Failed to upload photo.");
-    } finally {
-      setLoading(false);
-    }
+    }, 300);
   };
 
   const handleCancelModal = () => {
@@ -196,7 +202,7 @@ export default function CameraScreen() {
               <TouchableOpacity className="bg-gray-300 px-6 py-2 rounded-lg mr-2" onPress={handleCancelModal}>
                 <Text className="text-gray-800 font-semibold">Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity className="bg-green-600 px-6 py-2 rounded-lg ml-2" onPress={handleConfirmUpload} disabled={loading}>
+              <TouchableOpacity className="bg-green-600 px-6 py-2 rounded-lg ml-2" onPress={handleConfirmUpload}>
                 <Text className="text-white font-semibold">Send</Text>
               </TouchableOpacity>
             </View>
